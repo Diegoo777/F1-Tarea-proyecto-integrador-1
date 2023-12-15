@@ -1,0 +1,405 @@
+---
+title: "index.Rmd"
+author: "Diego Pedraza Barajas"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#LINK AQUI
+### por favor abralo y compile todas las funciones es un programa interactivo con menues para calcular cualquier cosa con cualquier valor que desee ingresar
+#####https://github.com/Diegoo777/F1-Tarea-proyecto-integrador-1/blob/main/fucionesAnualidades.R
+
+# Problma 1 para valarores futuros: 
+Una persona desea ahorrar $500.00 cada fin de quincena durante 40 años. Si el fondo de inversión paga una tasa de rendimientode 7.5% ¿Cuánto dinero tendrá ahorrado al final de su proyecto financiero?
+en este problema buscaresmos en valor final, comenzando con:
+## Anualidades Vencidas
+para sacar el valor final del ahorro usaremos la siguiente función
+```{r}
+VFVen = function(A, tasaI, T) 
+{
+  VF = A * (((1 + tasaI)^T - 1) / tasaI)
+  return(VF)
+}
+
+A = 500
+tasaI = 0.075/24
+T = 960
+
+re = VFVen(A, tasaI, T)
+print(paste("el valor futuro es $",round(re, digits = 2)))
+
+
+```
+## EL PAGO DE UNA ANUALIDAD VENCIDA
+siguiendo con el despeje de la formula anterior obtenemos la siguiente funcion para corroborar el valor de la anualidad o ahorro quincenal en este caso.
+
+```{r}
+pagoVFVen = function(VF, tasaI, T) 
+{
+  A = VF / (((1 + tasaI)^T -1) / tasaI)
+  return(A)
+}
+
+VF = 3038688.17
+tasaI = 0.075/24
+T = 960
+
+re = pagoVFVen(VF, tasaI, T)
+print(paste("el valor de la anualidad es $",round(re, digits = 2)))
+
+```
+## Calculo de la tasa de interes para valor futuro
+
+ahora debemos corrovorrar el valor de la tasa de interes conociendo los datos anteriores usaremos la siguiente funcion para realizar una aproximacion por diferencia
+
+```{r}
+tasaVFVen = function(VF, t, A) 
+  {
+  objective_function = function(r) 
+    {
+      A * ((1 + r) ** t - 1) / r
+    }
+ 
+  dif = 5000000
+ 
+  result = optimize(
+    f = function(r) abs(VF - objective_function(r)),
+    interval = c(0, 0.1),
+    tol = 1e-6)
+ 
+  return(result$minimum * 100 * 24)  ## el 24 por la division de la tasa por los periodos
+}
+VF = 3038688.17
+t = 960
+A = 500
+
+res = tasaVFVen(VF, t, A)
+print(paste("el valor de la taza de interes es ",round(res, digits = 2)))
+
+
+```
+## calculo del numero de periodos
+por ultimo dentro de anualidades vencidas calcularemos el numero de periodos usando el siguiente despeje de las formulas anteriores
+
+```{r}
+periodosVFVen = function(VF, tasaI, A) {
+  T = log(((VF*tasaI)/A)+1)/log(1+tasaI)
+  return(T)
+}
+
+VF = 3038688.17
+tasaI = 0.003125
+A = 500
+
+re = periodosVFVen(VF, tasaI, A)
+print(paste("El número de periodos es", round(re, digits = 2)))
+
+```
+de quincenas en total es decir 40 años
+## Ahora con anualiodad anticipadas para un valor final
+ahora haremos los mismos calculos pero para anualidades anticipadas, iniciando con el valor futuro a final del plazo de ahorro que se vera calculado a partir de la siguiente funcion: 
+
+```{r}
+VFAnt = function(A, tasaI, T) 
+{
+  VF = A * (((1 + tasaI)^T - 1) / tasaI) * (1 + tasaI)
+  return(VF)
+}
+
+A = 500
+tasaI = 0.075/24
+T = 960
+
+re = VFAnt(A, tasaI, T)
+print(paste("el valor futuro es $",round(re, digits = 2)))
+
+```
+## para el calculo de la anualidad para el valor futuro
+ahora toca corrovorar con el valor futuro obtenido la anualidad que se debe obtener para conseguir eses valor final
+
+
+```{r}
+pagoVFAnt = function(VF, tasaI, T) 
+{
+  A = VF*tasaI / ((((1 + tasaI)^T - 1)) * (1 + tasaI))
+  return(A)
+}
+
+VF = 3048184.07
+tasaI = 0.003125
+T = 960
+
+re = pagoVFAnt(VF, tasaI, T)
+print(paste("el valor de la anualidad es $",round(re, digits = 2)))
+
+```
+
+
+## tasa necasaria anualidades anticipadas
+ahora calcularesmos la tasa con la siguiente funcion basada en optimizacion que minimiza la diferencia entre el valor futuro deseado y el valor futuro calculado utilizando la tasa de interés candidata.
+
+```{r}
+tasaVFAnt = function(VF, t, A) 
+{
+  objective_function = function(r) 
+    {
+      A * ((1 + r) * ((1 + r) ** t - 1) / r)
+    }
+  
+  result = optimize(
+    f = function(r) abs(VF - objective_function(r)),
+    interval = c(0, 0.1),
+    tol = 1e-6)
+  
+  return(result$minimum * 100 * 24) ## el 24 por la division de la tasa por los periodos
+}
+
+VF = 3048184.07
+t = 960
+A = 500
+
+res = tasaVFAnt(VF, t, A)
+print(paste("El valor de la tasa de interés es ", round(res, digits = 2)))
+
+```
+## calculo del numero de periodos
+ahora confirmaremos el numero de periodos necesarios segun los datos anteriores para llegar a es valor final
+```{r}
+periodosVFAnt = function(VF, tasaI, A) {
+  T = log(1+(VF/(A*(1+tasaI)))*tasaI)/log(1+tasaI)
+  return(T)
+}
+
+VF = 3048184.07
+tasaI = 0.003125
+A = 500
+
+re = periodosVFAnt(VF, tasaI, A)
+print(paste("El número de periodos es", round(re, digits = 2)))
+
+```
+de quincenas totales o sea 40 años
+
+
+
+
+
+# Problema 2 para valores actuales
+una persona paga cada quincena $450.00 durante 2 años. Si la tienda departamental le cobra un 11% de interes ¿Cuánto le prestaron? 
+ 
+## anualidades vencidas para un valor actual
+debemos calcular lo que lleva pagado de intereses hasta ahora con los datos proporcionados
+sabemos que el valor de lo que le prestaron es lo que paga por quincena por las quincenas que pago sin intereses, por lo tanto debe de ser 450 * 48 = 21600
+anualidad = $450.00
+plazos = 2 años que se pueden reescribir ajustados a quincenas como 48 plazos
+tasa de interes de un 11% anual que dividido entre las quincenas de un año es igual a 0.4583% 0 0.004583
+
+
+```{r}
+VAVen = function(A, tasaI, T) 
+{
+  VA = A * ((1 - (1 + tasaI)^(-T)) / tasaI)
+  
+  return(VA)
+}
+
+A = 450
+tasaI = 0.004583
+T = 48
+
+re = VAVen(A, tasaI, T)
+print(paste("el valor acutual es: $",round(re, digits = 2)))
+
+```
+este es el valor de los intereses acumulado que sumado a al monto del prestamo da un pago total de: $40949.60
+
+## corrovoracion de las anualidades
+usamos el despeje de la anualidad con la funcion siguiente: 
+```{r}
+pagoVAVen = function(VA, tasaI, T) 
+{
+  A = VA * (tasaI / (1 - (1 + tasaI)^(-T)))
+  return(A)
+}
+
+VA = VAVen(A, tasaI, T)
+tasaI = 0.004583
+T = 48
+
+re = pagoVAVen(VA, tasaI, T)
+print(paste("el valor acutual es: $",round(re, digits = 2)))
+
+```
+## Calculo de la tasa para anualidades vencidas para un valor actual
+
+```{r}
+tasaVAVen = function(VA, t, A) 
+{
+  objective_function = function(r) 
+  {
+    A * (1 - (1 + r) ** -t) / r
+  }
+
+  dif = 5000000
+
+  result = optimize(
+    f = function(r) abs(VA - objective_function(r)),
+    interval = c(0, 0.1),
+    tol = 1e-6)
+
+  return(result$minimum * 100 * 24)  ## el 24 por la division de la tasa por los periodos
+}
+
+VA = VAVen(A, tasaI, T)
+t =48
+A = 450
+
+res = tasaVAVen(VA, t, A)
+print(paste("El valor de la tasa de interés es ", round(res, digits = 2),"%"))
+
+```
+## numero de periodos
+```{r}
+periodosVAVen = function(VA, tasaI, A) 
+{
+  T = -log(1 - (VA * tasaI) / A) / log(1 + tasaI)
+  return(T)
+}
+
+VA = 19349.6
+tasaI = 0.004583
+A = 450
+
+re = periodosVAVen(VA, tasaI, A)
+print(paste("El numero de periodos es", round(re, digits = 2)))
+
+```
+en quincenas es decir dos años
+
+
+
+
+# para anualidades anticipadas
+```{r}
+VAAnt = function(A, tasaI, T) 
+{
+  VA = A * ((1 - (1 + tasaI)^(-T)) / tasaI) * (1 + tasaI)
+  return(VA)
+}
+
+A = 450
+tasaI = 0.004583
+T = 48
+
+re = VAAnt(A, tasaI, T)
+print(paste("El monto final para una anualidad anticipada es ", round(re, digits = 2)))
+
+```
+
+## AHORA PARA VERIFICAR LA ANUALIDAD
+
+```{r}
+pagoVAAnt = function(VA, tasaI, T) 
+{
+  A = VA / ((1 - (1 + tasaI)^(-T)) / tasaI) / (1 + tasaI)
+  return(A)
+}
+
+VA = VAAnt(A, tasaI, T)
+tasaI = 0.004583
+T = 48
+
+re = pagoVAAnt(VA, tasaI, T)
+print(paste("El monto final para una anualidad anticipada es ", round(re, digits = 2)))
+```
+## ahora el calculo de la tasa de interes
+esta sera igual que la anterior pero ahora par la anualidad anticipa
+```{r}
+tasaVAAnt = function(VA, t, A) 
+{
+  objective_function = function(r) 
+  {
+    A * (1 - (1 + r) ** -t) / r / (1 + r)
+  }
+
+  dif = 5000000
+
+  result = optimize(
+    f = function(r) abs(VA - objective_function(r)),
+    interval = c(0, 0.1),
+    tol = 1e-6)
+
+  return(result$minimum * 100 * 24)  ## el 24 por la division de la tasa por los periodos
+}
+
+VA = VAAnt(A, tasaI, T)
+t = 48
+A = 450
+
+res = tasaVAAnt(VA, t, A)
+print(paste("El valor de la tasa de interés es ", round(res, digits = 2)))
+
+```
+no se eproximo lo suficiente no se muy bien porque pero casi jeje
+
+## por ultimo calcular el numero de periodos
+```{r}
+periodosVAAnt = function(VA, tasaI, A) 
+{
+  T = -log(1-(VA/(A*(1+tasaI))*tasaI))/log(1+tasaI)
+  return(T)
+}
+
+VA = 19438.28
+tasaI = 0.004583
+A = 450
+
+re = periodosVAAnt(VA, tasaI, A)
+print(paste("El número de periodos es", round(re, digits = 2)))
+
+```
+en quicenas igualmente
+
+
+# Problema 3 (solo para anualidades diferidas) Del problema anterior:
+###¿Cuánto le prestaron si comienza a pagar 3 meses después de adquirido el financiamiento?
+Anualidades diferidas valor presente con pagos vencidos
+
+funcion para encontrar el valor presente: 
+```{r}
+VADif = function(A, tasaI, D, N)
+{
+  VaDif = (A*((1-(1+tasaI)^-D)/tasaI))/(1+tasaI)^N
+  return(VaDif)
+}
+A = 450
+tasaI= 0.11/24
+D= 48
+N = 6
+  
+VaaDif= VADif(A, tasaI, D, N)
+print(paste("Un prestamo de $:", round(VaaDif, digits=2)))
+  
+```
+por ultimo la funcion para encontrar el pago quincenal necesario
+```{r}
+pagoVADif = function(VAD , TT, T, dif) 
+{
+  tasaII = (1 + TT)^(1/24) - 1
+  nP = T * 24
+  VAD = 19349.45
+  A = VAD /((1 - (1 + tasaII)^-nP)/tasaII)*(1 + tasaII)
+  
+  return(A)
+}
+
+pagoDif = pagoVADif(VADif, 0.11, 2,3)
+print(paste("Pago quincenal:", round(pagoDif, digits =0)))
+
+```
+
+
+
